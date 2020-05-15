@@ -24,13 +24,13 @@ type ExampleReply struct {
 	Y int
 }
 
-// JobRequestArgs job request args
-type JobRequestArgs struct {
+// TaskRequestArgs job request args
+type TaskRequestArgs struct {
 	Numbs int
 }
 
-// JobRequestReplyArgs job request response
-type JobRequestReplyArgs struct {
+// TaskRequestReplyArgs job request response
+type TaskRequestReplyArgs struct {
 	FileNames []string
 }
 

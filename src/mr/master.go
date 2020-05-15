@@ -27,10 +27,10 @@ func (m *Master) Example(args *ExampleArgs, reply *ExampleReply) error {
 	return nil
 }
 
-// Echo for test
-func (m *Master) Echo(args *ExampleArgs, reply *ExampleReply) error {
-	fmt.Println("I'm in echo ", args.X)
-	reply.Y = args.X + 1
+// GetTask for test
+func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
+	fmt.Println("I'm in echo ", args.Numbs)
+	reply.FileNames = []string{"fakename1", "fakename2", "fakename3"}
 	return nil
 }
 

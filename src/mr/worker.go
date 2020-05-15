@@ -7,6 +7,8 @@ import (
 	"net/rpc"
 )
 
+const BatchSize = 3
+
 //
 // Map functions return a slice of KeyValue.
 //
@@ -35,12 +37,17 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the master.
 	// CallExample()
-	CallExample()
+	for _, filename := range requestTask(BatchSize) {
+		fmt.Println("request filename:", filename)
+	}
 
 }
 
-func requestJob() {
-
+func requestTask(nums int) []string {
+	args := TaskRequestArgs{nums}
+	reply := TaskRequestReplyArgs{}
+	call("Master.GetTask", &args, &reply)
+	return reply.FileNames
 }
 
 //
