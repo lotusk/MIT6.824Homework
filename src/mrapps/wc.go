@@ -6,16 +6,20 @@ package main
 // go build -buildmode=plugin wc.go
 //
 
-import "../mr"
-import "unicode"
-import "strings"
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"unicode"
+
+	"../mr"
+)
 
 //
 // The map function is called once for each file of input. The first
 // argument is the name of the input file, and the second is the
 // file's complete contents. You should ignore the input file name,
-// and look only at the contents argument. The return value is a slice
+// and look only at the conte nts argument. The return value is a slice
 // of key/value pairs.
 //
 func Map(filename string, contents string) []mr.KeyValue {
@@ -41,4 +45,8 @@ func Map(filename string, contents string) []mr.KeyValue {
 func Reduce(key string, values []string) string {
 	// return the number of occurrences of this word.
 	return strconv.Itoa(len(values))
+}
+
+func main() {
+	fmt.Printf("abc")
 }

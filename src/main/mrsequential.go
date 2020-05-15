@@ -6,13 +6,16 @@ package main
 // go run mrsequential.go wc.so pg*.txt
 //
 
-import "fmt"
-import "../mr"
-import "plugin"
-import "os"
-import "log"
-import "io/ioutil"
-import "sort"
+import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"plugin"
+	"sort"
+
+	"../mr"
+)
 
 // for sorting by key.
 type ByKey []mr.KeyValue
@@ -23,6 +26,12 @@ func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 func main() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("ready for print dir")
+	fmt.Println(dir)
 	if len(os.Args) < 3 {
 		fmt.Fprintf(os.Stderr, "Usage: mrsequential xxx.so inputfiles...\n")
 		os.Exit(1)
@@ -36,7 +45,9 @@ func main() {
 	// accumulate the intermediate Map output.
 	//
 	intermediate := []mr.KeyValue{}
+	println(os.Args[2:])
 	for _, filename := range os.Args[2:] {
+		println("filename:", filename)
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("cannot open %v", filename)

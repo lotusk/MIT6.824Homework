@@ -1,3 +1,7 @@
 pkg/
 api.key
 *-handin.tar.gz
+.devcontainer/*
+src/main/mr-out-*
+.vscode/launch.json
+.vscode/settings.json
