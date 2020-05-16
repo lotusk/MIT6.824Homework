@@ -38,6 +38,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the master.
 	// CallExample()
+
 	for _, filename := range requestTask(BatchSize) {
 		fmt.Println("request filename:", filename)
 	}
@@ -49,6 +50,10 @@ func requestTask(nums int) []string {
 	args := TaskRequestArgs{nums, pid}
 	reply := TaskRequestReplyArgs{}
 	call("Master.GetTask", &args, &reply)
+	fmt.Println(reply.Err)
+	if reply.Err != "" {
+		fmt.Println("have error ", reply.Err)
+	}
 	return reply.FileNames
 }
 

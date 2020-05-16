@@ -41,6 +41,12 @@ func (m *Master) Example(args *ExampleArgs, reply *ExampleReply) error {
 
 // GetTask for test
 func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("work failed:", err)
+			reply.Err = fmt.Sprintf("%s", err)
+		}
+	}()
 	fmt.Println("I'm in echo ", args.Numbs)
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -48,14 +54,18 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 	if end > len(m.files) {
 		end = len(m.files)
 	}
-	reply.FileNames = m.files[m.cursor:end]
+	replyFiles := m.files[m.cursor:end]
 	m.cursor = end
 	//todo add task record
-	for _, file := range reply.FileNames {
+	for _, file := range replyFiles {
+		fmt.Println("put m.task ", file)
 		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}}
 	}
 	fmt.Println(m.files)
-	fmt.Println(m)
+	for k, v := range m.task {
+		fmt.Println(k, v)
+	}
+	reply.FileNames = replyFiles
 	return nil
 }
 
@@ -73,6 +83,11 @@ func (m *Master) server() {
 		log.Fatal("listen error:", e)
 	}
 	go http.Serve(l, nil)
+
+}
+
+func start() {
+
 }
 
 //
