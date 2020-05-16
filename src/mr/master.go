@@ -7,11 +7,23 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
+	"sync"
+	"time"
 )
 
-type Master struct {
-	// Your definitions here.
+type record struct {
+	pid      int
+	taskTime time.Time
+	done     bool
+	doneTime time.Time
+}
 
+// Master hold filenames
+type Master struct {
+	mu     sync.Mutex
+	task   map[string]record
+	files  []string
+	cursor int
 }
 
 // Your code here -- RPC handlers for the worker to call.
@@ -30,7 +42,20 @@ func (m *Master) Example(args *ExampleArgs, reply *ExampleReply) error {
 // GetTask for test
 func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
 	fmt.Println("I'm in echo ", args.Numbs)
-	reply.FileNames = []string{"fakename1", "fakename2", "fakename3"}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	end := m.cursor + args.Numbs
+	if end > len(m.files) {
+		end = len(m.files)
+	}
+	reply.FileNames = m.files[m.cursor:end]
+	m.cursor = end
+	//todo add task record
+	for _, file := range reply.FileNames {
+		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}}
+	}
+	fmt.Println(m.files)
+	fmt.Println(m)
 	return nil
 }
 
@@ -58,7 +83,6 @@ func (m *Master) Done() bool {
 	ret := false
 
 	// Your code here.
-
 	return ret
 }
 
@@ -69,7 +93,8 @@ func (m *Master) Done() bool {
 //
 func MakeMaster(files []string, nReduce int) *Master {
 	m := Master{}
-
+	m.files = files
+	m.task = map[string]record{}
 	// Your code here.
 
 	m.server()

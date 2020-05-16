@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"log"
 	"net/rpc"
+	"os"
 )
 
 const BatchSize = 3
@@ -44,7 +45,8 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 
 func requestTask(nums int) []string {
-	args := TaskRequestArgs{nums}
+	pid := os.Getpid()
+	args := TaskRequestArgs{nums, pid}
 	reply := TaskRequestReplyArgs{}
 	call("Master.GetTask", &args, &reply)
 	return reply.FileNames

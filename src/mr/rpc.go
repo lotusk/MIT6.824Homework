@@ -27,6 +27,7 @@ type ExampleReply struct {
 // TaskRequestArgs job request args
 type TaskRequestArgs struct {
 	Numbs int
+	Pid   int
 }
 
 // TaskRequestReplyArgs job request response
