@@ -68,7 +68,7 @@ func Worker(mapf func(string, string) []KeyValue,
 		for _, kv := range kva {
 			bucket[ihash(kv.Key)%task.ReduceNum] = append(bucket[ihash(kv.Key)%task.ReduceNum], kv)
 		}
-	}
+
 }
 
 func requestTask(nums int) TaskRequestReplyArgs {
