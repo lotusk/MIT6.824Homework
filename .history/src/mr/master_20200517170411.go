@@ -16,22 +16,20 @@ type record struct {
 	taskTime time.Time
 	done     bool
 	doneTime time.Time
-	taskID   int
 }
 
 // Master hold filenames
 type Master struct {
-	mu         sync.Mutex
-	task       map[string]record
-	files      []string
-	cursor     int
-	taskCursor int
-	nReduce    int
+	mu     sync.Mutex
+	task   map[string]record
+	files  []string
+	cursor int
 }
 
 // Your code here -- RPC handlers for the worker to call.
 
-// Example an example RPC handler.
+//
+// an example RPC handler.
 //
 // the RPC argument and reply types are defined in rpc.go.
 //
@@ -61,16 +59,13 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 	//todo add task record
 	for _, file := range replyFiles {
 		fmt.Println("put m.task ", file)
-		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}, m.taskCursor}
+		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}}
 	}
 	fmt.Println(m.files)
 	for k, v := range m.task {
 		fmt.Println(k, v)
 	}
 	reply.FileNames = replyFiles
-	reply.TaskID = m.taskCursor
-	reply.ReduceNum = m.nReduce
-	m.taskCursor++
 	return nil
 }
 
@@ -115,7 +110,6 @@ func MakeMaster(files []string, nReduce int) *Master {
 	m := Master{}
 	m.files = files
 	m.task = map[string]record{}
-	m.nReduce = nReduce
 	// Your code here.
 
 	m.server()

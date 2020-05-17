@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"sort"
 )
 
 // BatchSize task file size
@@ -48,9 +49,8 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the master.
 	// CallExample()
-
+	intermediate := []KeyValue{}
 	task := requestTask(BatchSize)
-	bucket := make([][]KeyValue, task.ReduceNum)
 	for _, filename := range task.FileNames {
 		fmt.Println("request filename:", filename)
 		fmt.Println("Task id  is:", task.TaskID)
@@ -64,11 +64,10 @@ func Worker(mapf func(string, string) []KeyValue,
 		}
 		file.Close()
 		kva := mapf(filename, string(content))
-		// intermediate = append(intermediate, kva...)
-		for _, kv := range kva {
-			bucket[ihash(kv.Key)%task.ReduceNum] = append(bucket[ihash(kv.Key)%task.ReduceNum], kv)
-		}
+		intermediate = append(intermediate, kva...)
 	}
+
+	sort.Sort(ByKey(intermediate))
 
 }
 

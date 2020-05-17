@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"sort"
 )
 
 // BatchSize task file size
@@ -64,11 +65,11 @@ func Worker(mapf func(string, string) []KeyValue,
 		}
 		file.Close()
 		kva := mapf(filename, string(content))
-		// intermediate = append(intermediate, kva...)
-		for _, kv := range kva {
-			bucket[ihash(kv.Key)%task.ReduceNum] = append(bucket[ihash(kv.Key)%task.ReduceNum], kv)
-		}
+		intermediate = append(intermediate, kva...)
+		bucket[ihash(kva.key)%task.ReduceNum] = append(bucket[ihash(kva.key)%task.ReduceNum], kva...)
 	}
+
+	sort.Sort(ByKey(intermediate))
 
 }
 

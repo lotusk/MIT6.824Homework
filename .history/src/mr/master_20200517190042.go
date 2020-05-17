@@ -69,7 +69,6 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 	}
 	reply.FileNames = replyFiles
 	reply.TaskID = m.taskCursor
-	reply.ReduceNum = m.nReduce
 	m.taskCursor++
 	return nil
 }

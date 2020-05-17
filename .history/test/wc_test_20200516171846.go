@@ -17,10 +17,4 @@ func TestMap(t *testing.T) {
 	for k, v := range task {
 		fmt.Println(k, v)
 	}
-
-	bucket := make([][]string, 10)
-	bucket[0] = []string{"a", "b"}
-	fmt.Println(bucket)
-	ftemp := []string{"333", "4444"}
-	fmt.Println(append(files, ftemp...))
 }

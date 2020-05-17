@@ -9,16 +9,7 @@ import (
 	"os"
 )
 
-// BatchSize task file size
 const BatchSize = 3
-
-// ByKey for sorting by key.
-type ByKey []KeyValue
-
-// for sorting by key.
-func (a ByKey) Len() int           { return len(a) }
-func (a ByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 //
 // Map functions return a slice of KeyValue.
@@ -48,12 +39,11 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	// uncomment to send the Example RPC to the master.
 	// CallExample()
-
-	task := requestTask(BatchSize)
-	bucket := make([][]KeyValue, task.ReduceNum)
-	for _, filename := range task.FileNames {
+	intermediate := []KeyValue{}
+	task:= requestTask(BatchSize)
+	for _, filename := range task.Filenam {
 		fmt.Println("request filename:", filename)
-		fmt.Println("Task id  is:", task.TaskID)
+		fmt.Println("Task id  is:"+)
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("cannot open %v", filename)
@@ -64,15 +54,12 @@ func Worker(mapf func(string, string) []KeyValue,
 		}
 		file.Close()
 		kva := mapf(filename, string(content))
-		// intermediate = append(intermediate, kva...)
-		for _, kv := range kva {
-			bucket[ihash(kv.Key)%task.ReduceNum] = append(bucket[ihash(kv.Key)%task.ReduceNum], kv)
-		}
+		intermediate = append(intermediate, kva...)
 	}
 
 }
 
-func requestTask(nums int) TaskRequestReplyArgs {
+func requestTask(nums int) []string {
 	pid := os.Getpid()
 	args := TaskRequestArgs{nums, pid}
 	reply := TaskRequestReplyArgs{}

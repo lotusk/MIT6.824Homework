@@ -33,8 +33,7 @@ type TaskRequestArgs struct {
 // TaskRequestReplyArgs job request response
 type TaskRequestReplyArgs struct {
 	FileNames []string
-	TaskID    int
-	ReduceNum int
+	TaskId    int
 	Err       string
 }
 

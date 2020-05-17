@@ -34,7 +34,6 @@ type TaskRequestArgs struct {
 type TaskRequestReplyArgs struct {
 	FileNames []string
 	TaskID    int
-	ReduceNum int
 	Err       string
 }
 

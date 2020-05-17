@@ -65,9 +65,10 @@ func Worker(mapf func(string, string) []KeyValue,
 		file.Close()
 		kva := mapf(filename, string(content))
 		// intermediate = append(intermediate, kva...)
-		for _, kv := range kva {
-			bucket[ihash(kv.Key)%task.ReduceNum] = append(bucket[ihash(kv.Key)%task.ReduceNum], kv)
+		for k, v := range kva {
+			bucket[ihash(k)%task.ReduceNum] = append(bucket[ihash(k)%task.ReduceNum], KeyValue(k, v))
 		}
+		bucket[ihash(kva.key)%task.ReduceNum] = append(bucket[ihash(kva.key)%task.ReduceNum], kva...)
 	}
 
 }
