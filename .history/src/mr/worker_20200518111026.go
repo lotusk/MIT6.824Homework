@@ -59,8 +59,8 @@ func Worker(mapf func(string, string) []KeyValue,
 		fmt.Println("no task get, I am exit!")
 	}
 
-	if _, err := os.Stat(PathIntermediate); os.IsNotExist(err) {
-		os.Mkdir(PathIntermediate, 0700)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, mode)
 	}
 	buckets := make([][]KeyValue, task.ReduceNum)
 	for _, filename := range task.FileNames {
@@ -83,7 +83,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 
 	for i, bucket := range buckets {
-		iterName := fmt.Sprintf("%s/mr-%d-%d", PathIntermediate, task.TaskID, i)
+		iterName := fmt.Sprintf("itermediate/mr-%d-%d", task.TaskID, i)
 		ofile, err := os.Create(iterName)
 		// fmt.Fprintf(ofile, "abc")
 		if err != nil {

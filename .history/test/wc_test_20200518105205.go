@@ -24,5 +24,5 @@ func TestMap(t *testing.T) {
 	ftemp := []string{"333", "4444"}
 	fmt.Println(append(files, ftemp...))
 	fmt.Println("abc" + "def")
-	fmt.Printf("abc %s", "def")
+	fmt.Println("abc %s", "def")
 }

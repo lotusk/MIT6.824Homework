@@ -60,7 +60,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 
 	if _, err := os.Stat(PathIntermediate); os.IsNotExist(err) {
-		os.Mkdir(PathIntermediate, 0700)
+		os.Mkdir(PathIntermediate, os.ModeDir)
 	}
 	buckets := make([][]KeyValue, task.ReduceNum)
 	for _, filename := range task.FileNames {
