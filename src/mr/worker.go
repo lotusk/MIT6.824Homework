@@ -55,6 +55,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	task := requestTask(BatchSize)
 	fmt.Println("task id ", task.TaskID)
+	//todo delete
 	if len(task.FileNames) == 0 {
 		fmt.Println("no task get, I am exit!")
 	}
@@ -62,6 +63,16 @@ func Worker(mapf func(string, string) []KeyValue,
 	if _, err := os.Stat(PathIntermediate); os.IsNotExist(err) {
 		os.Mkdir(PathIntermediate, 0700)
 	}
+
+	if task.TaskType == "M" {
+		processMap(mapf, task)
+	}
+
+	// ready for reduce
+
+}
+
+func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs) {
 	buckets := make([][]KeyValue, task.ReduceNum)
 	for _, filename := range task.FileNames {
 		fmt.Println("request filename:", filename)

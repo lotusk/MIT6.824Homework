@@ -17,6 +17,7 @@ type record struct {
 	done     bool
 	doneTime time.Time
 	taskID   int
+	taskType string
 }
 
 // Master hold filenames
@@ -49,6 +50,23 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 			reply.Err = fmt.Sprintf("%s", err)
 		}
 	}()
+	m.getMapTask(args, reply)
+	return nil
+}
+
+// UpdateTaskStatus change task status when task done or error
+func (m *Master) UpdateTaskStatus(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("work failed:", err)
+			reply.Err = fmt.Sprintf("%s", err)
+		}
+	}()
+	m.getMapTask(args, reply)
+	return nil
+}
+
+func (m *Master) getMapTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
 	fmt.Println("I'm in echo ", args.Numbs)
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -61,7 +79,7 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 	//todo add task record
 	for _, file := range replyFiles {
 		fmt.Println("put m.task ", file)
-		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}, m.taskCursor}
+		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}, m.taskCursor, TaskMapType}
 	}
 	fmt.Println(m.files)
 	for k, v := range m.task {
@@ -70,6 +88,8 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 	reply.FileNames = replyFiles
 	reply.TaskID = m.taskCursor
 	reply.ReduceNum = m.nReduce
+	reply.TaskType = TaskMapType
+
 	m.taskCursor++
 	return nil
 }

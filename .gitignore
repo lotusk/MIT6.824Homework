@@ -5,3 +5,4 @@ api.key
 src/main/mr-out-*
 .vscode/launch.json
 .vscode/settings.json
+.history/*

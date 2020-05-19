@@ -11,6 +11,12 @@ import (
 	"strconv"
 )
 
+// TaskMapType type map
+const TaskMapType = "M"
+
+// TaskReduceType  type reduce
+const TaskReduceType = "R"
+
 //
 // example to show how to declare the arguments
 // and reply for an RPC.
@@ -32,10 +38,12 @@ type TaskRequestArgs struct {
 
 // TaskRequestReplyArgs job request response
 type TaskRequestReplyArgs struct {
-	FileNames []string
-	TaskID    int
-	ReduceNum int
-	Err       string
+	FileNames    []string
+	TaskID       int
+	ReduceNum    int
+	Err          string
+	TaskType     string
+	ReduceBucket string
 }
 
 // Add your RPC definitions here.
