@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
+	"sync"
 	"testing"
+	"time"
 )
 
 type Salary struct {
@@ -24,6 +26,19 @@ func (s *Salary) getSalary() int {
 // func (e *Employee) getSalary() int {
 // 	return e.base * e.num
 // }
+
+const (
+	//UNASSIGN task not assign yet
+	UNASSIGN = iota
+	// ASSIGN have beean assign
+	ASSIGN
+	// SUCCESS success
+	SUCCESS
+	// FAILED failed
+	FAILED
+	// TIMEOUT timeout
+	TIMEOUT
+)
 
 func TestMap(t *testing.T) {
 	fmt.Println("efg")
@@ -50,4 +65,28 @@ func TestMap(t *testing.T) {
 	fmt.Println(employee)
 	fmt.Println(employee.getSalary())
 	fmt.Println(employee.base)
+
+	fmt.Println(UNASSIGN, ASSIGN, SUCCESS)
+	twoprint()
+	time.Sleep(time.Duration(5) * time.Second)
+}
+
+var a string
+var once sync.Once
+
+func setup() {
+	println("init")
+	a = "hello, world"
+}
+
+func doprint() {
+	once.Do(setup)
+	print(a)
+}
+
+func twoprint() {
+	go doprint()
+	go doprint()
+	go doprint()
+	go doprint()
 }

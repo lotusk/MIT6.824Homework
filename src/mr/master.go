@@ -12,9 +12,10 @@ import (
 )
 
 type record struct {
+	file     string
 	pid      int
 	taskTime time.Time
-	done     bool
+	status   TaskStatus
 	doneTime time.Time
 	taskID   int
 	taskType string
@@ -22,12 +23,25 @@ type record struct {
 
 // Master hold filenames
 type Master struct {
-	mu         sync.Mutex
-	task       map[string]record
-	files      []string
-	cursor     int
-	taskCursor int
-	nReduce    int
+	mu             sync.Mutex
+	record         map[string]*record
+	tasks          map[int][]*record
+	files          []string
+	cursor         int
+	taskCursor     int
+	nReduce        int
+	phase          string
+	failedFiles    []string
+	successCounter int
+}
+
+type argError struct {
+	arg  TaskStatus
+	prob string
+}
+
+func (e *argError) Error() string {
+	return fmt.Sprintf("%d - %s", e.arg, e.prob)
 }
 
 // Your code here -- RPC handlers for the worker to call.
@@ -50,19 +64,37 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 			reply.Err = fmt.Sprintf("%s", err)
 		}
 	}()
-	m.getMapTask(args, reply)
+	if m.phase == TaskMapType {
+		m.getMapTask(args, reply)
+	} else if m.phase == TaskReduceType {
+		//TODO reduce
+	} else {
+		//TODO done
+	}
 	return nil
 }
 
 // UpdateTaskStatus change task status when task done or error
-func (m *Master) UpdateTaskStatus(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
+func (m *Master) UpdateMapTaskStatus(args *UpdateStatusRequest, reply *UpdateStatusReply) error {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("work failed:", err)
 			reply.Err = fmt.Sprintf("%s", err)
 		}
 	}()
-	m.getMapTask(args, reply)
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if args.Status == SUCCESS {
+		for _, record := range m.tasks[args.TaskID] {
+			record.status = SUCCESS
+			m.successCounter++
+		}
+	} else if args.Status == FAILED {
+		//TODO add to failed list
+	} else {
+		return &argError{args.Status, "map task just return success or failed"}
+	}
 	return nil
 }
 
@@ -77,12 +109,16 @@ func (m *Master) getMapTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) 
 	replyFiles := m.files[m.cursor:end]
 	m.cursor = end
 	//todo add task record
+	tasks := []*record{}
 	for _, file := range replyFiles {
 		fmt.Println("put m.task ", file)
-		m.task[file] = record{args.Pid, time.Now(), false, time.Time{}, m.taskCursor, TaskMapType}
+		record := &record{file, args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskMapType}
+		m.record[file] = record
+		tasks = append(tasks, record)
 	}
+	m.tasks[m.taskCursor] = tasks
 	fmt.Println(m.files)
-	for k, v := range m.task {
+	for k, v := range m.record {
 		fmt.Println(k, v)
 	}
 	reply.FileNames = replyFiles
@@ -134,8 +170,10 @@ func (m *Master) Done() bool {
 func MakeMaster(files []string, nReduce int) *Master {
 	m := Master{}
 	m.files = files
-	m.task = map[string]record{}
+	m.record = map[string]*record{}
+	m.tasks = map[int][]*record{}
 	m.nReduce = nReduce
+	m.phase = TaskMapType
 	// Your code here.
 
 	m.server()

@@ -55,7 +55,7 @@ func Worker(mapf func(string, string) []KeyValue,
 
 	task := requestTask(BatchSize)
 	fmt.Println("task id ", task.TaskID)
-	//todo delete
+	//TODO delete
 	if len(task.FileNames) == 0 {
 		fmt.Println("no task get, I am exit!")
 	}
@@ -65,14 +65,18 @@ func Worker(mapf func(string, string) []KeyValue,
 	}
 
 	if task.TaskType == "M" {
-		processMap(mapf, task)
+		err := processMap(mapf, task)
+		if err != nil {
+			log.Fatalf("map failed %s", err)
+		}
+		updateMapTaskSuccess(task.TaskID)
 	}
 
 	// ready for reduce
 
 }
 
-func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs) {
+func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs) error {
 	buckets := make([][]KeyValue, task.ReduceNum)
 	for _, filename := range task.FileNames {
 		fmt.Println("request filename:", filename)
@@ -80,10 +84,12 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatalf("cannot open %v", filename)
+			return err
 		}
 		content, err := ioutil.ReadAll(file)
 		if err != nil {
 			log.Fatalf("cannot read %v", filename)
+			return err
 		}
 		file.Close()
 		kva := mapf(filename, string(content))
@@ -100,6 +106,7 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 		if err != nil {
 			//todo task error
 			log.Fatal(fmt.Sprintf("create file error %s", err))
+			return err
 		}
 		enc := json.NewEncoder(ofile)
 		for _, kv := range bucket {
@@ -107,10 +114,12 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 			if err != nil {
 				//todo task error
 				log.Fatal(fmt.Sprintf("create file error %s", err))
+				return err
 			}
 		}
 		ofile.Close()
 	}
+	return nil
 }
 
 func requestTask(nums int) TaskRequestReplyArgs {
@@ -118,6 +127,17 @@ func requestTask(nums int) TaskRequestReplyArgs {
 	args := TaskRequestArgs{nums, pid}
 	reply := TaskRequestReplyArgs{}
 	call("Master.GetTask", &args, &reply)
+	fmt.Println(reply.Err)
+	if reply.Err != "" {
+		fmt.Println("have error ", reply.Err)
+	}
+	return reply
+}
+
+func updateMapTaskSuccess(taskId int) UpdateStatusReply {
+	args := UpdateStatusRequest{"M", taskId, SUCCESS}
+	reply := UpdateStatusReply{}
+	call("Master.UpdateMapTaskStatus", &args, &reply)
 	fmt.Println(reply.Err)
 	if reply.Err != "" {
 		fmt.Println("have error ", reply.Err)

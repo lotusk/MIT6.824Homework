@@ -17,7 +17,18 @@ const TaskMapType = "M"
 // TaskReduceType  type reduce
 const TaskReduceType = "R"
 
-//
+// TaskStatus  refer UNASSIGN, ASSIGN,SUCCESS,FAILED,TIMEOUT
+type TaskStatus int
+
+const (
+	//UNASSIGN task not assign yet
+	UNASSIGN TaskStatus = iota
+	ASSIGN
+	SUCCESS
+	FAILED
+	TIMEOUT
+)
+
 // example to show how to declare the arguments
 // and reply for an RPC.
 //
@@ -44,6 +55,17 @@ type TaskRequestReplyArgs struct {
 	Err          string
 	TaskType     string
 	ReduceBucket string
+}
+
+// UpdateStatusRequest update status when success or failed
+type UpdateStatusRequest struct {
+	TaskType string
+	TaskID   int
+	Status   TaskStatus
+}
+
+type UpdateStatusReply struct {
+	Err string
 }
 
 // Add your RPC definitions here.
