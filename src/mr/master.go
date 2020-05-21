@@ -11,6 +11,13 @@ import (
 	"time"
 )
 
+// type Phase int
+
+// const (
+// 	PhaseMap Phase = iota
+// 	PhaseReduce
+// )
+
 type record struct {
 	file     string
 	pid      int
@@ -68,6 +75,7 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 		m.getMapTask(args, reply)
 	} else if m.phase == TaskReduceType {
 		//TODO reduce
+		log.Println("let me see  how to reduce!")
 	} else {
 		//TODO done
 	}
@@ -90,6 +98,11 @@ func (m *Master) UpdateMapTaskStatus(args *UpdateStatusRequest, reply *UpdateSta
 			record.status = SUCCESS
 			m.successCounter++
 		}
+
+		if m.successCounter >= len(m.files) {
+			m.phase = TaskReduceType
+			log.Println("All Map task have done , let we entry reduce phase!")
+		}
 	} else if args.Status == FAILED {
 		//TODO add to failed list
 	} else {
@@ -106,27 +119,33 @@ func (m *Master) getMapTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) 
 	if end > len(m.files) {
 		end = len(m.files)
 	}
-	replyFiles := m.files[m.cursor:end]
-	m.cursor = end
-	//todo add task record
-	tasks := []*record{}
-	for _, file := range replyFiles {
-		fmt.Println("put m.task ", file)
-		record := &record{file, args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskMapType}
-		m.record[file] = record
-		tasks = append(tasks, record)
-	}
-	m.tasks[m.taskCursor] = tasks
-	fmt.Println(m.files)
-	for k, v := range m.record {
-		fmt.Println(k, v)
-	}
-	reply.FileNames = replyFiles
-	reply.TaskID = m.taskCursor
-	reply.ReduceNum = m.nReduce
-	reply.TaskType = TaskMapType
 
-	m.taskCursor++
+	if end > m.cursor {
+		replyFiles := m.files[m.cursor:end]
+		m.cursor = end
+		//todo add task record
+		tasks := []*record{}
+		for _, file := range replyFiles {
+			fmt.Println("put m.task ", file)
+			record := &record{file, args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskMapType}
+			m.record[file] = record
+			tasks = append(tasks, record)
+		}
+		m.tasks[m.taskCursor] = tasks
+		fmt.Println(m.files)
+		for k, v := range m.record {
+			fmt.Println(k, v)
+		}
+		reply.FileNames = replyFiles
+		reply.TaskID = m.taskCursor
+		reply.ReduceNum = m.nReduce
+		reply.TaskType = TaskMapType
+
+		m.taskCursor++
+	} else {
+		// return empty reply ,let worker  sleep a while
+		log.Println("no map task and wait all task done!")
+	}
 	return nil
 }
 

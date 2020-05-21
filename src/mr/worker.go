@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"time"
 )
 
 // BatchSize task file size
@@ -48,28 +49,33 @@ func ihash(key string) int {
 func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
+	if _, err := os.Stat(PathIntermediate); os.IsNotExist(err) {
+		//could use once mutex
+		os.Mkdir(PathIntermediate, 0700)
+	}
 	// Your worker implementation here.
 
 	// uncomment to send the Example RPC to the master.
-	// CallExample()
+	for {
+		task := requestTask(BatchSize)
 
-	task := requestTask(BatchSize)
-	fmt.Println("task id ", task.TaskID)
-	//TODO delete
-	if len(task.FileNames) == 0 {
-		fmt.Println("no task get, I am exit!")
-	}
-
-	if _, err := os.Stat(PathIntermediate); os.IsNotExist(err) {
-		os.Mkdir(PathIntermediate, 0700)
-	}
-
-	if task.TaskType == "M" {
-		err := processMap(mapf, task)
-		if err != nil {
-			log.Fatalf("map failed %s", err)
+		if task.TaskType == "M" {
+			fmt.Println("task id ", task.TaskID)
+			if len(task.FileNames) == 0 {
+				fmt.Println("no map task get, I am ready to sleep for a while!")
+				time.Sleep(time.Second * 5)
+				continue
+			}
+			err := processMap(mapf, task)
+			if err != nil {
+				log.Fatalf("map failed %s", err)
+			}
+			updateMapTaskSuccess(task.TaskID)
+		} else {
+			log.Println("I have no  Idea")
+			fmt.Println("no reduce task get, I am ready to sleep for a while!")
+			time.Sleep(time.Second * 50)
 		}
-		updateMapTaskSuccess(task.TaskID)
 	}
 
 	// ready for reduce
