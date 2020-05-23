@@ -59,7 +59,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	for {
 		task := requestTask(BatchSize)
 
-		if task.TaskType == "M" {
+		if task.TaskType == TaskMapType {
 			fmt.Println("task id ", task.TaskID)
 			if len(task.FileNames) == 0 {
 				fmt.Println("no map task get, I am ready to sleep for a while!")
@@ -71,10 +71,14 @@ func Worker(mapf func(string, string) []KeyValue,
 				log.Fatalf("map failed %s", err)
 			}
 			updateMapTaskSuccess(task.TaskID)
-		} else {
-			log.Println("I have no  Idea")
-			fmt.Println("no reduce task get, I am ready to sleep for a while!")
+		} else if task.TaskType == TaskReduceType {
+			log.Println("let me see reduce bucket is", task.ReduceBucket)
+			log.Println("I have no  Idea for task", task.TaskID)
+			fmt.Println(" I am ready to sleep for a while!")
 			time.Sleep(time.Second * 50)
+		} else {
+			log.Println("May be we should wait!")
+			time.Sleep(time.Second * 5)
 		}
 	}
 

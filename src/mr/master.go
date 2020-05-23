@@ -30,16 +30,19 @@ type record struct {
 
 // Master hold filenames
 type Master struct {
-	mu             sync.Mutex
-	record         map[string]*record
-	tasks          map[int][]*record
-	files          []string
-	cursor         int
-	taskCursor     int
-	nReduce        int
-	phase          string
-	failedFiles    []string
-	successCounter int
+	mu                   sync.Mutex
+	record               map[string]*record
+	tasks                map[int][]*record
+	reduceTasks          map[int]*record
+	files                []string
+	cursor               int
+	taskCursor           int
+	nReduce              int
+	phase                string
+	failedFiles          []string
+	successCounter       int
+	successReduceCounter int
+	reduceBucketCursor   int
 }
 
 type argError struct {
@@ -75,7 +78,9 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 		m.getMapTask(args, reply)
 	} else if m.phase == TaskReduceType {
 		//TODO reduce
-		log.Println("let me see  how to reduce!")
+		log.Println("let me try to reduce!")
+		m.getReduceTask(args, reply)
+
 	} else {
 		//TODO done
 	}
@@ -90,7 +95,6 @@ func (m *Master) UpdateMapTaskStatus(args *UpdateStatusRequest, reply *UpdateSta
 			reply.Err = fmt.Sprintf("%s", err)
 		}
 	}()
-
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if args.Status == SUCCESS {
@@ -112,7 +116,7 @@ func (m *Master) UpdateMapTaskStatus(args *UpdateStatusRequest, reply *UpdateSta
 }
 
 func (m *Master) getMapTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
-	fmt.Println("I'm in echo ", args.Numbs)
+	fmt.Println("I'm in map ", args.Numbs)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	end := m.cursor + args.Numbs
@@ -146,6 +150,28 @@ func (m *Master) getMapTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) 
 		// return empty reply ,let worker  sleep a while
 		log.Println("no map task and wait all task done!")
 	}
+	return nil
+}
+
+func (m *Master) getReduceTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("work failed:", err)
+			reply.Err = fmt.Sprintf("%s", err)
+		}
+	}()
+
+	fmt.Println("I'm in reduce ")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	//TODO
+
+	reply.TaskType = "R"
+	reply.TaskID = m.taskCursor
+	reply.ReduceBucket = m.reduceBucketCursor
+	m.reduceTasks[m.taskCursor] = &record{"", args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskReduceType}
+	m.reduceBucketCursor++
+	m.taskCursor++
 	return nil
 }
 
@@ -191,6 +217,7 @@ func MakeMaster(files []string, nReduce int) *Master {
 	m.files = files
 	m.record = map[string]*record{}
 	m.tasks = map[int][]*record{}
+	m.reduceTasks = map[int]*record{}
 	m.nReduce = nReduce
 	m.phase = TaskMapType
 	// Your code here.

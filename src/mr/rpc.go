@@ -54,7 +54,7 @@ type TaskRequestReplyArgs struct {
 	ReduceNum    int
 	Err          string
 	TaskType     string
-	ReduceBucket string
+	ReduceBucket int
 }
 
 // UpdateStatusRequest update status when success or failed

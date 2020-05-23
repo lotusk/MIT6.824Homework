@@ -5,7 +5,6 @@ import (
 	"math"
 	"sync"
 	"testing"
-	"time"
 )
 
 type Salary struct {
@@ -68,7 +67,8 @@ func TestMap(t *testing.T) {
 
 	fmt.Println(UNASSIGN, ASSIGN, SUCCESS)
 	twoprint()
-	time.Sleep(time.Duration(5) * time.Second)
+	fmt.Println(len("你好"), "多长")
+	// time.Sleep(time.Duration(5) * time.Second)
 }
 
 var a string
