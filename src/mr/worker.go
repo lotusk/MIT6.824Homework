@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -69,12 +71,19 @@ func Worker(mapf func(string, string) []KeyValue,
 			err := processMap(mapf, task)
 			if err != nil {
 				log.Fatalf("map failed %s", err)
+			} else {
+				updateMapTaskSuccess(task.TaskID)
 			}
-			updateMapTaskSuccess(task.TaskID)
+
 		} else if task.TaskType == TaskReduceType {
 			log.Println("let me see reduce bucket is", task.ReduceBucket)
 			log.Println("I have no  Idea for task", task.TaskID)
-			fmt.Println(" I am ready to sleep for a while!")
+			files, err := getReduceFiles(task.ReduceBucket)
+			if err != nil {
+				log.Fatalf("cannot cat reduce files %v", err)
+			}
+			fmt.Printf("reducefile %#v\n", files)
+
 			time.Sleep(time.Second * 50)
 		} else {
 			log.Println("May be we should wait!")
@@ -130,6 +139,26 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 		ofile.Close()
 	}
 	return nil
+}
+
+func getReduceFiles(bucket int) ([]string, error) {
+	currentfiles, err := ioutil.ReadDir(PathIntermediate)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	reduceFiles := []string{}
+	for _, file := range currentfiles {
+		f := file.Name()
+		if strings.HasPrefix(f, "mr") {
+			split := strings.Split(f, "-")
+			if split[2] == strconv.Itoa(bucket) {
+				reduceFiles = append(reduceFiles, f)
+			}
+		}
+	}
+	return reduceFiles, nil
 }
 
 func requestTask(nums int) TaskRequestReplyArgs {

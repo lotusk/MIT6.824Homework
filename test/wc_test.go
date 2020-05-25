@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math"
+	"strconv"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -69,6 +73,29 @@ func TestMap(t *testing.T) {
 	twoprint()
 	fmt.Println(len("你好"), "多长")
 	// time.Sleep(time.Duration(5) * time.Second)
+
+	currentfiles, err := ioutil.ReadDir("/Users/kai/learn/GoProject/lab1/6.824/src/main/intermediate")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	reduceFiles := []string{}
+	for _, file := range currentfiles {
+		fmt.Println(file.Name())
+		f := file.Name()
+
+		if strings.HasPrefix(f, "mr") {
+			split := strings.Split(f, "-")
+			if split[1] == "2" {
+				reduceFiles = append(reduceFiles, f)
+			}
+		}
+	}
+
+	fmt.Println(reduceFiles)
+	fmt.Println(string(2))
+	fmt.Println(strconv.Itoa(2))
+	fmt.Println("2" == strconv.Itoa(2))
 }
 
 var a string

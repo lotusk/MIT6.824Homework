@@ -164,14 +164,15 @@ func (m *Master) getReduceTask(args *TaskRequestArgs, reply *TaskRequestReplyArg
 	fmt.Println("I'm in reduce ")
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	//TODO
-
-	reply.TaskType = "R"
-	reply.TaskID = m.taskCursor
-	reply.ReduceBucket = m.reduceBucketCursor
-	m.reduceTasks[m.taskCursor] = &record{"", args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskReduceType}
-	m.reduceBucketCursor++
-	m.taskCursor++
+	//TODO if reducebucket cursor == m. reduce num  ,then  no more reduce task left
+	if m.reduceBucketCursor < m.nReduce {
+		reply.TaskType = "R"
+		reply.TaskID = m.taskCursor
+		reply.ReduceBucket = m.reduceBucketCursor
+		m.reduceTasks[m.taskCursor] = &record{"", args.Pid, time.Now(), ASSIGN, time.Time{}, m.taskCursor, TaskReduceType}
+		m.reduceBucketCursor++
+		m.taskCursor++
+	}
 	return nil
 }
 
