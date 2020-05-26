@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/rpc"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -78,13 +79,11 @@ func Worker(mapf func(string, string) []KeyValue,
 		} else if task.TaskType == TaskReduceType {
 			log.Println("let me see reduce bucket is", task.ReduceBucket)
 			log.Println("I have no  Idea for task", task.TaskID)
-			files, err := getReduceFiles(task.ReduceBucket)
+			err := processReduce(reducef, task)
 			if err != nil {
-				log.Fatalf("cannot cat reduce files %v", err)
+				log.Fatalf("error in process Reduce %s\n", err)
 			}
-			fmt.Printf("reducefile %#v\n", files)
-
-			time.Sleep(time.Second * 50)
+			time.Sleep(time.Second * 5)
 		} else {
 			log.Println("May be we should wait!")
 			time.Sleep(time.Second * 5)
@@ -102,7 +101,7 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 		fmt.Println("Task id  is:", task.TaskID)
 		file, err := os.Open(filename)
 		if err != nil {
-			log.Fatalf("cannot open %v", filename)
+			log.Fatalf("cannot open map file %v", filename)
 			return err
 		}
 		content, err := ioutil.ReadAll(file)
@@ -138,6 +137,62 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 		}
 		ofile.Close()
 	}
+	return nil
+}
+
+func processReduce(reducef func(string, []string) string, task TaskRequestReplyArgs) error {
+	files, err := getReduceFiles(task.ReduceBucket)
+	if err != nil {
+		log.Fatalf("cannot cat reduce files %v", err)
+	}
+	fmt.Printf("reducefile %#v\n", files)
+	intermediate := []KeyValue{}
+
+	for _, f := range files {
+		file, err := os.Open(PathIntermediate + "/" + f)
+		if err != nil {
+			log.Printf("cannot open inter %v", f)
+			return err
+		}
+		dec := json.NewDecoder(file)
+		for {
+			var kv KeyValue
+			if err := dec.Decode(&kv); err != nil {
+				break
+			}
+			intermediate = append(intermediate, kv)
+		}
+	}
+
+	sort.Sort(ByKey(intermediate))
+
+	oname := fmt.Sprintf("%s/mr-out-%d", PathIntermediate, task.ReduceBucket)
+	ofile, _ := os.Create(oname)
+
+	//
+	// call Reduce on each distinct key in intermediate[],
+	// and print the result to mr-out-0.
+	//
+	i := 0
+	for i < len(intermediate) {
+		j := i + 1
+		for j < len(intermediate) && intermediate[j].Key == intermediate[i].Key {
+			j++
+		}
+		values := []string{}
+		for k := i; k < j; k++ {
+			values = append(values, intermediate[k].Value)
+		}
+		output := reducef(intermediate[i].Key, values)
+
+		// this is the correct format for each line of Reduce output.
+		fmt.Fprintf(ofile, "%v %v\n", intermediate[i].Key, output)
+
+		i = j
+	}
+
+	ofile.Close()
+
 	return nil
 }
 

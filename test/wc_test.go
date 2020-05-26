@@ -96,6 +96,7 @@ func TestMap(t *testing.T) {
 	fmt.Println(string(2))
 	fmt.Println(strconv.Itoa(2))
 	fmt.Println("2" == strconv.Itoa(2))
+	fmt.Println("2/" + "2")
 }
 
 var a string
