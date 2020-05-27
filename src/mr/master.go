@@ -81,8 +81,8 @@ func (m *Master) GetTask(args *TaskRequestArgs, reply *TaskRequestReplyArgs) err
 		log.Println("let me try to reduce!")
 		m.getReduceTask(args, reply)
 
-	} else {
-		//TODO done
+	} else if m.phase == JobDown {
+		log.Println("job done exit!")
 	}
 	return nil
 }
@@ -112,6 +112,25 @@ func (m *Master) UpdateMapTaskStatus(args *UpdateStatusRequest, reply *UpdateSta
 	} else {
 		return &argError{args.Status, "map task just return success or failed"}
 	}
+	return nil
+}
+
+func (m *Master) UpdateReduceTaskStatus(args *UpdateStatusRequest, reply *UpdateStatusReply) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("work failed:", err)
+			reply.Err = fmt.Sprintf("%s", err)
+		}
+	}()
+	//TODO
+	if args.Status == SUCCESS {
+		//TODO
+	} else if args.Status == FAILED {
+		//TODO add to failed list
+	} else {
+		return &argError{args.Status, "map task just return success or failed"}
+	}
+
 	return nil
 }
 
@@ -202,10 +221,10 @@ func start() {
 // if the entire job has finished.
 //
 func (m *Master) Done() bool {
-	ret := false
+	// ret := (JobDown == m.phase)
 
 	// Your code here.
-	return ret
+	return JobDown == m.phase
 }
 
 // MakeMaster as the name

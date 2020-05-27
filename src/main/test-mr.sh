@@ -10,7 +10,7 @@ RACE=
 #RACE=-race
 
 # run the test in a fresh sub-directory.
-rm -rf mr-tmp
+rm -rf c
 mkdir mr-tmp || exit 1
 cd mr-tmp || exit 1
 rm -f mr-*

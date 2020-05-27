@@ -18,7 +18,7 @@ import (
 const BatchSize = 3
 
 // PathIntermediate mr intermediate output directory
-const PathIntermediate = "intermediate"
+const PathIntermediate = "."
 
 // ByKey for sorting by key.
 type ByKey []KeyValue
@@ -66,7 +66,7 @@ func Worker(mapf func(string, string) []KeyValue,
 			fmt.Println("task id ", task.TaskID)
 			if len(task.FileNames) == 0 {
 				fmt.Println("no map task get, I am ready to sleep for a while!")
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 1)
 				continue
 			}
 			err := processMap(mapf, task)
@@ -83,10 +83,11 @@ func Worker(mapf func(string, string) []KeyValue,
 			if err != nil {
 				log.Fatalf("error in process Reduce %s\n", err)
 			}
-			time.Sleep(time.Second * 5)
+
+			time.Sleep(time.Second * 1)
 		} else {
 			log.Println("May be we should wait!")
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 1)
 		}
 	}
 
@@ -229,10 +230,20 @@ func requestTask(nums int) TaskRequestReplyArgs {
 }
 
 func updateMapTaskSuccess(taskId int) UpdateStatusReply {
-	args := UpdateStatusRequest{"M", taskId, SUCCESS}
+	args := UpdateStatusRequest{TaskMapType, taskId, SUCCESS}
 	reply := UpdateStatusReply{}
 	call("Master.UpdateMapTaskStatus", &args, &reply)
 	fmt.Println(reply.Err)
+	if reply.Err != "" {
+		fmt.Println("have error ", reply.Err)
+	}
+	return reply
+}
+
+func updateReduceTaskSuccess(taskId int) UpdateStatusReply {
+	args := UpdateStatusRequest{TaskReduceType, taskId, SUCCESS}
+	reply := UpdateStatusReply{}
+	call("Master.UpdateReduceTaskStatus", &args, &reply)
 	if reply.Err != "" {
 		fmt.Println("have error ", reply.Err)
 	}

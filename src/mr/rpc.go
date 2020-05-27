@@ -16,6 +16,7 @@ const TaskMapType = "M"
 
 // TaskReduceType  type reduce
 const TaskReduceType = "R"
+const JobDown = "done"
 
 // TaskStatus  refer UNASSIGN, ASSIGN,SUCCESS,FAILED,TIMEOUT
 type TaskStatus int
