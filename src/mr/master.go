@@ -125,6 +125,12 @@ func (m *Master) UpdateReduceTaskStatus(args *UpdateStatusRequest, reply *Update
 	//TODO
 	if args.Status == SUCCESS {
 		//TODO
+		m.reduceTasks[args.TaskID].status = SUCCESS
+		m.successReduceCounter++
+
+		if m.successReduceCounter >= m.nReduce {
+			m.phase = JobDown
+		}
 	} else if args.Status == FAILED {
 		//TODO add to failed list
 	} else {

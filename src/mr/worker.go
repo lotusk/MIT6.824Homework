@@ -82,6 +82,8 @@ func Worker(mapf func(string, string) []KeyValue,
 			err := processReduce(reducef, task)
 			if err != nil {
 				log.Fatalf("error in process Reduce %s\n", err)
+			} else {
+				updateReduceTaskSuccess(task.TaskID)
 			}
 
 			time.Sleep(time.Second * 1)
@@ -128,6 +130,7 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 			return err
 		}
 		enc := json.NewEncoder(ofile)
+		defer ofile.Close()
 		for _, kv := range bucket {
 			err := enc.Encode(&kv)
 			if err != nil {
@@ -136,7 +139,7 @@ func processMap(mapf func(string, string) []KeyValue, task TaskRequestReplyArgs)
 				return err
 			}
 		}
-		ofile.Close()
+
 	}
 	return nil
 }
@@ -169,6 +172,7 @@ func processReduce(reducef func(string, []string) string, task TaskRequestReplyA
 
 	oname := fmt.Sprintf("%s/mr-out-%d", PathIntermediate, task.ReduceBucket)
 	ofile, _ := os.Create(oname)
+	defer ofile.Close()
 
 	//
 	// call Reduce on each distinct key in intermediate[],
@@ -192,8 +196,6 @@ func processReduce(reducef func(string, []string) string, task TaskRequestReplyA
 		i = j
 	}
 
-	ofile.Close()
-
 	return nil
 }
 
@@ -209,7 +211,7 @@ func getReduceFiles(bucket int) ([]string, error) {
 		f := file.Name()
 		if strings.HasPrefix(f, "mr") {
 			split := strings.Split(f, "-")
-			if split[2] == strconv.Itoa(bucket) {
+			if len(split) == 3 && split[2] == strconv.Itoa(bucket) {
 				reduceFiles = append(reduceFiles, f)
 			}
 		}
